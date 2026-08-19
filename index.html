@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amigia | Gestão de Projetos</title>
+  
+  <!-- FAVICON DA ABA -->
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="shortcut icon" type="image/x-icon" href="logo.png">
+
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            clickup: {
+              purple: '#7b68ee',
+              darkBg: '#1e1f23',
+              sidebarBg: '#2a2b2d',
+              mainBg: '#f7f8f9',
+              border: '#e8eaed',
+              textDark: '#292d34',
+              textMuted: '#68737d'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+  </style>
+</head>
+<body class="bg-clickup-mainBg text-clickup-textDark font-sans h-screen flex overflow-hidden select-none">
+
+  <!-- 1. EXTREME LEFT ICON BAR -->
+  <aside class="w-14 bg-[#1e1f23] text-gray-400 flex flex-col items-center py-3 gap-5 border-r border-gray-800 shrink-0 z-20">
+    <div class="w-9 h-9 rounded-xl bg-white/10 p-1 flex items-center justify-center overflow-hidden border border-white/20">
+      <img src="logo.png" alt="Amigia" class="w-full h-full object-contain" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\'fa-solid fa-bolt text-purple-400\'></i>';">
+    </div>
+
+    <nav class="flex flex-col gap-4 text-xs font-medium w-full items-center">
+      <button class="flex flex-col items-center gap-1 text-white hover:text-purple-400 transition w-full py-1 border-l-2 border-purple-500">
+        <i class="fa-solid fa-house text-base"></i>
+        <span class="text-[9px]">Início</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 hover:text-white transition w-full py-1 border-l-2 border-transparent">
+        <i class="fa-solid fa-calendar-check text-base"></i>
+        <span class="text-[9px]">Planejador</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 hover:text-white transition w-full py-1 border-l-2 border-transparent">
+        <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+        <span class="text-[9px]">IA</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 hover:text-white transition w-full py-1 border-l-2 border-transparent">
+        <i class="fa-solid fa-users text-base"></i>
+        <span class="text-[9px]">Equipes</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 hover:text-white transition w-full py-1 border-l-2 border-transparent">
+        <i class="fa-regular fa-folder-closed text-base"></i>
+        <span class="text-[9px]">Documentos</span>
+      </button>
+      <button class="flex flex-col items-center gap-1 hover:text-white transition w-full py-1 border-l-2 border-transparent">
+        <i class="fa-solid fa-chart-pie text-base"></i>
+        <span class="text-[9px]">Painéis</span>
+      </button>
+    </nav>
+
+    <div class="mt-auto flex flex-col items-center gap-4">
+      <div class="w-8 h-8 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-xs shadow-md">
+        SF
+      </div>
+    </div>
+  </aside>
+
+  <!-- 2. WORKSPACE / NAVIGATION SIDEBAR -->
+  <aside class="w-60 bg-[#f4f5f7] border-r border-slate-200 flex flex-col shrink-0 text-xs text-slate-700">
+    <div class="p-3 border-b border-slate-200 flex items-center justify-between">
+      <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+        <span class="w-5 h-5 bg-purple-600 text-white text-[10px] rounded flex items-center justify-center">A</span>
+        <span class="truncate">Amigia | Partner Ops</span>
+      </div>
+      <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+    </div>
+
+    <div class="p-2">
+      <button onclick="openModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-1.5 px-3 rounded-lg flex items-center justify-center gap-2 shadow-sm transition">
+        <i class="fa-solid fa-plus text-xs"></i>
+        <span>Criar Tarefa</span>
+      </button>
+    </div>
+
+    <!-- SPACES NAVIGATION TREE -->
+    <div class="flex-1 overflow-y-auto p-2 space-y-4">
+      <div>
+        <div class="flex items-center justify-between px-2 py-1 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+          <span>Espaços</span>
+          <i class="fa-solid fa-plus cursor-pointer hover:text-slate-700"></i>
+        </div>
+        <div class="mt-1 space-y-0.5">
+          <div class="flex items-center justify-between px-2 py-1.5 rounded-md bg-slate-200 font-bold text-slate-900 cursor-pointer">
+            <div class="flex items-center gap-2 truncate">
+              <span class="w-4 h-4 rounded bg-rose-500 text-white text-[9px] flex items-center justify-center font-bold">A</span>
+              <span class="truncate">Amigia | Partner Operations</span>
+            </div>
+            <i class="fa-solid fa-chevron-down text-[9px]"></i>
+          </div>
+
+          <!-- SUBFOLDERS -->
+          <div class="pl-4 space-y-0.5 mt-1 text-slate-600">
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-200 cursor-pointer">
+              <i class="fa-regular fa-folder text-slate-400"></i>
+              <span>Microsoft</span>
+            </div>
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-200 cursor-pointer">
+              <i class="fa-regular fa-folder text-slate-400"></i>
+              <span>Google</span>
+            </div>
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-200 cursor-pointer">
+              <i class="fa-regular fa-folder text-slate-400"></i>
+              <span>Certificações</span>
+            </div>
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-200 cursor-pointer">
+              <i class="fa-regular fa-folder text-slate-400"></i>
+              <span>Brindes & Logística</span>
+            </div>
+            <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-200 cursor-pointer">
+              <i class="fa-regular fa-folder text-slate-400"></i>
+              <span>Administrativo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between px-2 py-1 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+          <span>Superagentes IA</span>
+        </div>
+        <div class="mt-1 space-y-0.5 text-slate-600">
+          <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-200 cursor-pointer">
+            <i class="fa-solid fa-robot text-purple-500"></i>
+            <span>1:1 Meeting Agent</span>
+          </div>
+          <div class="flex items-center gap-2 px-2 py-1 rounded hover:bg-slate-200 cursor-pointer">
+            <i class="fa-solid fa-brain text-amber-500"></i>
+            <span>CEO Digest</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 3. MAIN WORKSPACE CONTAINER -->
+  <div class="flex-1 flex flex-col overflow-hidden bg-white">
+    
+    <!-- TOP HEADER / SEARCH BAR -->
+    <header class="h-12 border-b border-slate-200 px-4 flex items-center justify-between bg-white shrink-0">
+      <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+        <span class="w-4 h-4 bg-rose-500 text-white rounded text-[8px] flex items-center justify-center font-bold">A</span>
+        <span>Amigia | Partner Operations</span>
+        <i class="fa-solid fa-star text-slate-300 hover:text-amber-400 cursor-pointer"></i>
+      </div>
+
+      <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg w-72 border border-slate-200 focus-within:bg-white focus-within:ring-2 focus-within:ring-purple-500 transition">
+        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+        <input type="text" id="searchInput" placeholder="Pesquisar tarefas..." class="bg-transparent border-none text-xs w-full focus:outline-none">
+        <span class="text-[9px] bg-slate-200 px-1 rounded text-slate-500 font-mono">Ctrl K</span>
+      </div>
+
+      <div class="flex items-center gap-3 text-xs text-slate-600">
+        <button class="flex items-center gap-1 hover:text-purple-600 font-medium">
+          <i class="fa-solid fa-sparkles text-purple-500"></i>
+          <span>Chats com IA</span>
+        </button>
+        <button class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add Tarefa</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEWS BAR (Lista, Quadro, Calendario, etc) -->
+    <div class="border-b border-slate-200 px-4 py-2 flex items-center justify-between bg-white text-xs shrink-0">
+      <div class="flex items-center gap-1 border-b border-transparent">
+        <button class="px-3 py-1 font-semibold text-purple-600 border-b-2 border-purple-600 flex items-center gap-1.5">
+          <i class="fa-solid fa-list-ul"></i> Lista
+        </button>
+        <button class="px-3 py-1 font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-table-columns"></i> Quadro
+        </button>
+        <button class="px-3 py-1 font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+          <i class="fa-regular fa-calendar"></i> Calendário
+        </button>
+        <button class="px-3 py-1 font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-gantt"></i> Gantt
+        </button>
+        <button class="px-3 py-1 font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-table"></i> Tabela
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md border border-slate-200 font-medium text-[11px]">
+          <i class="fa-solid fa-filter text-slate-400 mr-1"></i> Filtro
+        </span>
+        <span class="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md border border-slate-200 font-medium text-[11px]">
+          <i class="fa-solid fa-user text-slate-400 mr-1"></i> Responsável
+        </span>
+      </div>
+    </div>
+
+    <!-- MAIN TASK LIST VIEW AREA -->
+    <main class="flex-1 overflow-y-auto p-6 bg-slate-50/50 space-y-6" id="taskListContainer">
+      <!-- As listas de tarefas categorizadas serão geradas dinamicamente aqui -->
+    </main>
+
+  </div>
+
+  <!-- MODAL DE CRIAR/EDITAR TAREFA -->
+  <div id="taskModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 relative">
+      <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      
+      <h3 id="modalTitle" class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-list-check text-purple-600"></i>
+        <span>Nova Tarefa</span>
+      </h3>
+
+      <form id="taskForm" class="space-y-4">
+        <input type="hidden" id="taskId">
+        
+        <div>
+          <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Nome da Tarefa *</label>
+          <input type="text" id="inputName" required placeholder="Ex: TSP - confirmar ativação final" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status *</label>
+            <select id="inputStatus" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none">
+              <option value="AGUARDANDO MICROSOFT">AGUARDANDO MICROSOFT</option>
+              <option value="AÇÃO NOSSA">AÇÃO NOSSA</option>
+              <option value="EM PROGRESSO">EM PROGRESSO</option>
+              <option value="PENDENTE">PENDENTE</option>
+              <option value="CONCLUÍDO">CONCLUÍDO</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Prioridade *</label>
+            <select id="inputPriority" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none">
+              <option value="Urgente">🔴 Urgente</option>
+              <option value="Alta">🚩 Alta</option>
+              <option value="Normal">🔷 Normal</option>
+              <option value="Baixa">⚪ Baixa</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Data de Vencimento</label>
+            <input type="text" id="inputDueDate" placeholder="Ex: Hoje, Amanhã, qui" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1">Iniciais do Responsável</label>
+            <input type="text" id="inputAssignee" placeholder="Ex: SF" maxlength="2" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs uppercase font-bold text-center focus:outline-none">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+          <button type="button" id="btnDeleteTask" class="text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg text-xs font-bold hidden" onclick="deleteTask()">
+            <i class="fa-solid fa-trash mr-1"></i> Excluir
+          </button>
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="closeModal()" class="px-4 py-1.5 border border-slate-300 rounded-xl text-xs font-semibold text-slate-600">Cancelar</button>
+            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs px-5 py-1.5 rounded-xl transition">Salvar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Configurações do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyAtiJIROH430x8BwgM1WQGLwABALMoq_sg",
+      authDomain: "realtime-database-d7ca2.firebaseapp.com",
+      databaseURL: "https://realtime-database-d7ca2-default-rtdb.firebaseio.com",
+      projectId: "realtime-database-d7ca2",
+      storageBucket: "realtime-database-d7ca2.firebasestorage.app",
+      messagingSenderId: "886282109249",
+      appId: "1:886282109249:web:f76831b8d033fedbe221c0"
+    };
+
+    let db = null, tasksRef = null;
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      tasksRef = db.ref("projetos_clickup");
+    } catch(e) { console.warn("Firebase offline:", e); }
+
+    let tasks = [];
+
+    const statusConfig = {
+      'AGUARDANDO MICROSOFT': { color: 'bg-purple-600', badgeBg: 'bg-purple-100 text-purple-700' },
+      'AÇÃO NOSSA': { color: 'bg-purple-700', badgeBg: 'bg-purple-100 text-purple-800' },
+      'EM PROGRESSO': { color: 'bg-blue-600', badgeBg: 'bg-blue-100 text-blue-700' },
+      'PENDENTE': { color: 'bg-slate-400', badgeBg: 'bg-slate-100 text-slate-600' },
+      'CONCLUÍDO': { color: 'bg-emerald-600', badgeBg: 'bg-emerald-100 text-emerald-700' }
+    };
+
+    const initialSeedData = [
+      { id: 't1', name: 'TSP — confirmar ativação final', status: 'AGUARDANDO MICROSOFT', dueDate: 'qui', priority: 'Alta', assignee: 'SF' },
+      { id: 't2', name: 'GTP — cobrar retorno', status: 'AÇÃO NOSSA', dueDate: 'Hoje', priority: 'Urgente', assignee: 'SF' },
+      { id: 't3', name: 'Pearson Partner Store', status: 'AÇÃO NOSSA', dueDate: 'Amanhã', priority: 'Alta', assignee: 'SF' }
+    ];
+
+    function initSync() {
+      if (tasksRef) {
+        tasksRef.on('value', (snapshot) => {
+          const data = snapshot.val();
+          tasks = [];
+          if (data) {
+            Object.keys(data).forEach(key => tasks.push({ id: key, ...data[key] }));
+          } else {
+            initialSeedData.forEach(item => tasksRef.child(item.id).set(item));
+          }
+          renderTasks();
+        });
+      } else {
+        tasks = initialSeedData;
+        renderTasks();
+      }
+    }
+
+    function renderTasks() {
+      const container = document.getElementById('taskListContainer');
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      container.innerHTML = '';
+
+      const filteredTasks = tasks.filter(t => t.name.toLowerCase().includes(searchTerm));
+      const statuses = ['AGUARDANDO MICROSOFT', 'AÇÃO NOSSA', 'EM PROGRESSO', 'PENDENTE', 'CONCLUÍDO'];
+
+      statuses.forEach(statusKey => {
+        const statusGroup = filteredTasks.filter(t => t.status === statusKey);
+        const config = statusConfig[statusKey] || statusConfig['PENDENTE'];
+
+        let groupHtml = `
+          <div class="space-y-2">
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-700">
+              <span class="${config.color} text-white px-2 py-0.5 rounded text-[10px] tracking-wider font-extrabold uppercase">
+                ${statusKey}
+              </span>
+              <span class="text-slate-400 font-semibold">${statusGroup.length}</span>
+            </div>
+
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+              <div class="grid grid-cols-12 text-[10px] font-bold text-slate-400 uppercase tracking-wider px-4 py-2 border-b border-slate-100 bg-slate-50/50">
+                <div class="col-span-5">Nome</div>
+                <div class="col-span-2 text-center">Responsável</div>
+                <div class="col-span-2">Data de vencimento</div>
+                <div class="col-span-2">Prioridade</div>
+                <div class="col-span-1 text-right">Ação</div>
+              </div>
+
+              <div class="divide-y divide-slate-100">
+        `;
+
+        if (statusGroup.length === 0) {
+          groupHtml += `
+            <div class="px-4 py-3 text-xs text-slate-400 italic">Nenhuma tarefa neste status.</div>
+          `;
+        } else {
+          statusGroup.forEach(task => {
+            let priorityBadge = task.priority === 'Urgente' ? '🚩 Urgente' : (task.priority === 'Alta' ? '🚩 Alta' : '🔷 Normal');
+            let dueDateColor = task.dueDate === 'Hoje' ? 'text-rose-600 font-bold' : 'text-slate-600';
+
+            groupHtml += `
+              <div onclick="openModal('${task.id}')" class="grid grid-cols-12 items-center px-4 py-2.5 text-xs hover:bg-slate-50 transition cursor-pointer">
+                <div class="col-span-5 font-medium text-slate-800 flex items-center gap-2">
+                  <i class="fa-regular fa-circle text-slate-300 hover:text-purple-600"></i>
+                  <span>${task.name}</span>
+                </div>
+                <div class="col-span-2 flex justify-center">
+                  <span class="w-6 h-6 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-[10px]">
+                    ${task.assignee || 'SF'}
+                  </span>
+                </div>
+                <div class="col-span-2 ${dueDateColor}">${task.dueDate || '-'}</div>
+                <div class="col-span-2 text-slate-600 font-medium">${priorityBadge}</div>
+                <div class="col-span-1 text-right text-slate-400 hover:text-slate-600">
+                  <i class="fa-solid fa-ellipsis"></i>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        groupHtml += `
+                <div onclick="openModalForStatus('${statusKey}')" class="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-purple-600 hover:bg-slate-50 cursor-pointer transition flex items-center gap-1">
+                  <i class="fa-solid fa-plus text-[10px]"></i> Adicionar Tarefa
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        container.innerHTML += groupHtml;
+      });
+    }
+
+    function openModal(id = null) {
+      const modal = document.getElementById('taskModal');
+      const deleteBtn = document.getElementById('btnDeleteTask');
+      
+      if (id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
+        document.getElementById('taskId').value = task.id;
+        document.getElementById('inputName').value = task.name;
+        document.getElementById('inputStatus').value = task.status;
+        document.getElementById('inputPriority').value = task.priority || 'Alta';
+        document.getElementById('inputDueDate').value = task.dueDate || '';
+        document.getElementById('inputAssignee').value = task.assignee || 'SF';
+        document.getElementById('modalTitle').querySelector('span').textContent = 'Editar Tarefa';
+        deleteBtn.classList.remove('hidden');
+      } else {
+        document.getElementById('taskForm').reset();
+        document.getElementById('taskId').value = '';
+        document.getElementById('modalTitle').querySelector('span').textContent = 'Nova Tarefa';
+        deleteBtn.classList.add('hidden');
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function openModalForStatus(status) {
+      openModal();
+      document.getElementById('inputStatus').value = status;
+    }
+
+    function closeModal() {
+      document.getElementById('taskModal').classList.add('hidden');
+    }
+
+    document.getElementById('taskForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = document.getElementById('taskId').value || 'task_' + Date.now();
+      const taskData = {
+        name: document.getElementById('inputName').value.trim(),
+        status: document.getElementById('inputStatus').value,
+        priority: document.getElementById('inputPriority').value,
+        dueDate: document.getElementById('inputDueDate').value.trim(),
+        assignee: document.getElementById('inputAssignee').value.trim().toUpperCase() || 'SF'
+      };
+
+      if (tasksRef) {
+        tasksRef.child(id).set(taskData);
+      } else {
+        const index = tasks.findIndex(t => t.id === id);
+        if (index !== -1) tasks[index] = { id, ...taskData };
+        else tasks.push({ id, ...taskData });
+        renderTasks();
+      }
+      closeModal();
+    });
+
+    function deleteTask() {
+      const id = document.getElementById('taskId').value;
+      if (id && confirm('Deseja realmente excluir esta tarefa?')) {
+        if (tasksRef) tasksRef.child(id).remove();
+        else {
+          tasks = tasks.filter(t => t.id !== id);
+          renderTasks();
+        }
+        closeModal();
+      }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderTasks);
+
+    initSync();
+  </script>
+</body>
+</html>
